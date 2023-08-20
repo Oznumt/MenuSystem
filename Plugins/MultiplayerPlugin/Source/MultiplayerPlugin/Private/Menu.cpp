@@ -2,6 +2,8 @@
 
 
 #include "Menu.h"
+#include "Components/Button.h"
+#include "MultiplayerPluginSubsystem.h"
 
 void UMenu::MenuSetup()
 {
@@ -22,4 +24,62 @@ void UMenu::MenuSetup()
 			PlayerController->SetShowMouseCursor(true);
 		}
 	}
+
+	UGameInstance* GameInstance = GetGameInstance();
+	if (GameInstance)
+	{
+		MultiplayerPluginSubsystem = GameInstance->GetSubsystem<UMultiplayerPluginSubsystem>();
+	}
+
+}
+
+bool UMenu::Initialize()
+{
+	if (!Super::Initialize())
+	{
+		return false;
+	}
+	if (HostButton)
+	{
+		HostButton->OnClicked.AddDynamic(this, &UMenu::HostButtonClicked);
+	}
+	if (JoinButton)
+	{
+		JoinButton->OnClicked.AddDynamic(this, &UMenu::JoinButtonClicked);
+	}
+
+	return true;
+}
+
+void UMenu::HostButtonClicked()
+{
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(
+			-1,
+			15.f,
+			FColor::Yellow,
+			FString(TEXT("Host Button Clicked"))
+		);
+	}
+
+	if (MultiplayerPluginSubsystem)
+	{
+		MultiplayerPluginSubsystem->CreateSession(4, FString("FreeForAll"));
+	}
+
+}
+
+void UMenu::JoinButtonClicked()
+{
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(
+			-1,
+			15.f,
+			FColor::Yellow,
+			FString(TEXT("Join Button Clicked"))
+		);
+	}
+
 }
