@@ -4,6 +4,8 @@
 #include "Menu.h"
 #include "Components/Button.h"
 #include "MultiplayerPluginSubsystem.h"
+#include "OnlineSessionSettings.h"
+
 
 void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch)
 {
@@ -34,6 +36,15 @@ void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch)
 		MultiplayerPluginSubsystem = GameInstance->GetSubsystem<UMultiplayerPluginSubsystem>();
 	}
 
+	if (MultiplayerPluginSubsystem)
+	{
+		MultiplayerPluginSubsystem->MultiplayerOnCreateSessionComplete.AddDynamic(this, &ThisClass::OnCreateSession);
+		MultiplayerPluginSubsystem->MultiplayerOnFindSessionsComplete.AddUObject(this, &ThisClass::OnFindSessions);
+		MultiplayerPluginSubsystem->MultiplayerOnJoinSessionComplete.AddUObject(this, &ThisClass::OnJoinSession);
+		MultiplayerPluginSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &ThisClass::OnDestroySession);
+		MultiplayerPluginSubsystem->MultiplayerOnStartSessionComplete.AddDynamic(this, &ThisClass::OnStartSession);
+	}
+
 }
 
 bool UMenu::Initialize()
@@ -60,27 +71,69 @@ void UMenu::NativeDestruct()
 	Super::NativeDestruct();
 }
 
-void UMenu::HostButtonClicked()
+void UMenu::OnCreateSession(bool bWasSuccessful)
 {
-	if (GEngine)
+	if (bWasSuccessful)
 	{
-		GEngine->AddOnScreenDebugMessage(
-			-1,
-			15.f,
-			FColor::Yellow,
-			FString(TEXT("Host Button Clicked"))
-		);
-	}
-
-	if (MultiplayerPluginSubsystem)
-	{
-		MultiplayerPluginSubsystem->CreateSession(NumPublicConnections, MatchType);
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				15.f,
+				FColor::Yellow,
+				FString(TEXT("Session created successfully!"))
+			);
+		}
 		UWorld* World = GetWorld();
 		if (World)
 		{
 			World->ServerTravel("/Game/ThirdPerson/Maps/Lobby?listen");
-		
+
 		}
+	}
+	else
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				15.f,
+				FColor::Red,
+				FString(TEXT("Failed to create session!"))
+			);
+		}
+
+	}
+
+}
+
+void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful)
+{
+
+}
+
+void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
+{
+
+}
+
+void UMenu::OnDestroySession(bool bWasSuccessful)
+{
+
+}
+
+void UMenu::OnStartSession(bool bWasSuccessful)
+{
+
+}
+
+void UMenu::HostButtonClicked()
+{
+
+	if (MultiplayerPluginSubsystem)
+	{
+		MultiplayerPluginSubsystem->CreateSession(NumPublicConnections, MatchType);
+		
 	}
 
 }
